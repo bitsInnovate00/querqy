@@ -3,6 +3,7 @@ package querqy.solr;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.analysis.util.ResourceLoaderAware;
 import org.apache.solr.common.SolrException;
+import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrCore;
@@ -225,8 +226,39 @@ public abstract class QuerqyQParserPlugin extends QParserPlugin implements Resou
     @Override
     public final QParser createParser(final String qstr, final SolrParams localParams, final SolrParams params,
                                       final SolrQueryRequest req) {
+                                        ModifiableSolrParams modifiableParams=null;
+                                        String newQstr=null;
+        if(localParams != null)
+        {
+        ModifiableSolrParams modifiableSolrParams=(ModifiableSolrParams) localParams;                                 
+        System.out.println("Modifiable Solr Params Content is "+modifiableSolrParams);
+        String fqParameter=modifiableSolrParams.get("fq");
+        System.out.println("fqParameter "+fqParameter);
+        System.out.println("Q parameter value "+modifiableSolrParams.get("q"));
+        }else{
+            modifiableParams=new ModifiableSolrParams(params);
+            System.out.println("Modifiable Global Params Content is "+modifiableParams);
+        String fqParameter=modifiableParams.get("fq");
+        String[] fqParamArray=null;
+        if(fqParameter!=null)
+        {
+            fqParamArray=fqParameter.split(":");
+            String fieldName=fqParamArray[0];
+            String fieldVal=fqParamArray[1];
+            modifiableParams.add("qf",fieldName);
+            modifiableParams.set("q", fieldVal.replace("(", "").replace(")", ""));
+            modifiableParams.remove("fq");
+            System.out.println("Updated modified param is "+modifiableParams);
+        }
+
+         newQstr=modifiableParams.get("q");
+        
+        System.out.println("fqParameter global "+fqParameter);
+        System.out.println("Q parameter global value "+modifiableParams.get("q"));
+        }
         String rewritersParam = null;
         if (localParams != null) {
+            
             rewritersParam = localParams.get(PARAM_REWRITERS);
 
         }
@@ -261,16 +293,16 @@ public abstract class QuerqyQParserPlugin extends QParserPlugin implements Resou
         }
 
         if (termQueryCacheName == null) {
-            return createParser(qstr, localParams, params, req, rewriteChain, infoLogging, null);
+            return createParser(newQstr, localParams, modifiableParams, req, rewriteChain, infoLogging, null);
         } else {
 
             @SuppressWarnings("unchecked")
             final SolrCache<CacheKey, TermQueryCacheValue> solrCache = req.getSearcher().getCache(termQueryCacheName);
             if (solrCache == null) {
                 logger.warn("Missing Solr cache {}", termQueryCacheName);
-                return createParser(qstr, localParams, params, req, rewriteChain, infoLogging, null);
+                return createParser(newQstr, localParams, modifiableParams, req, rewriteChain, infoLogging, null);
             } else {
-                return createParser(qstr, localParams, params, req, rewriteChain, infoLogging,
+                return createParser(newQstr, localParams, modifiableParams, req, rewriteChain, infoLogging,
                         new SolrTermQueryCacheAdapter(ignoreTermQueryCacheUpdates, solrCache));
             }
 

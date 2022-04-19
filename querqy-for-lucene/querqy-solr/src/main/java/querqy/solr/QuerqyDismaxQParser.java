@@ -54,11 +54,17 @@ public class QuerqyDismaxQParser extends QParser {
      * @param termQueryCache The term query cache.
      *
      */
+
+    private static String updateQString(String qstr)
+    {
+        System.out.println("$$$$$$$$$$$$$$$$ Query String "+ qstr);
+        return qstr;
+    } 
     public QuerqyDismaxQParser(final String qstr, final SolrParams localParams, final SolrParams params,
                                final SolrQueryRequest req, final QuerqyParser querqyParser,
                                final RewriteChain rewriteChain, final InfoLogging infoLogging,
                                final TermQueryCache termQueryCache) {
-        super(qstr, localParams, params, req);
+        super(updateQString(qstr), localParams, params, req);
         final String q = Objects.requireNonNull(qstr).trim();
 
         if (q.isEmpty()) {
