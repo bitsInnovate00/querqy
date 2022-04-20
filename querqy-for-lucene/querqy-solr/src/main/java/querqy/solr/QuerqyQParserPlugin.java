@@ -256,6 +256,8 @@ public abstract class QuerqyQParserPlugin extends QParserPlugin implements Resou
         System.out.println("fqParameter global "+fqParameter);
         System.out.println("Q parameter global value "+modifiableParams.get("q"));
         }
+        req.setParams(modifiableParams);
+        System.out.println(" Solr Request with Modifiable params "+req);
         String rewritersParam = null;
         if (localParams != null) {
             
